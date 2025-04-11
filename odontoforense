@@ -62,7 +62,7 @@ CREATE TABLE Report (
 );
 
 -- Resultados de comparação ligados à evidência
-CREATE TABLE ComparisonResult (
+CREATE TABLE laudo (
     id VARCHAR(255) PRIMARY KEY,
     resultado VARCHAR(255) NOT NULL,
     precisao FLOAT NOT NULL,
