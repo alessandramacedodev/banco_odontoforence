@@ -68,7 +68,7 @@ CREATE TABLE Laudos (
     emitido_por_id INT,
     arquivo_pdf_url VARCHAR(255),
     status ENUM('rascunho', 'em_revisao', 'finalizado') DEFAULT 'rascunho',
-    chave_verificacao VARCHAR(64) UNIQUE,
+    chave_verificacao VARCHAR(255) UNIQUE,
     FOREIGN KEY (caso_id) REFERENCES Caso(id),
     FOREIGN KEY (emitido_por_id) REFERENCES User(id)
 );
