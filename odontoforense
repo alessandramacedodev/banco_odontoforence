@@ -3,66 +3,132 @@ USE odontoforense;
 
 -- Usuários
 CREATE TABLE User (
-    id VARCHAR(255) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
     role ENUM('Admin', 'Perito', 'Assistente') NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX (email)
 );
 
--- Casos
-CREATE TABLE Caso (
-    id VARCHAR(255) PRIMARY KEY,
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    dataAbertura DATE NOT NULL,
-    dataFechamento DATE
+-- Pacientes (ou indivíduos analisados)
+CREATE TABLE Paciente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    data_nascimento DATE,
+    sexo ENUM('masculino', 'feminino', 'outro'),
+    cpf VARCHAR(14) UNIQUE,
+    rg VARCHAR(20),
+    contato VARCHAR(100),
+    endereco TEXT
 );
 
--- Relacionamento caso ↔ perito
+-- Casos periciais
+CREATE TABLE Caso (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descricao TEXT NOT NULL,
+    status ENUM('aberto', 'em_andamento', 'concluido') DEFAULT 'aberto',
+    dataAbertura DATE NOT NULL,
+    dataFechamento DATE,
+    paciente_id INT,
+    perito_responsavel_id INT,
+    FOREIGN KEY (paciente_id) REFERENCES Paciente(id),
+    FOREIGN KEY (perito_responsavel_id) REFERENCES User(id)
+);
+
+-- Relacionamento caso ↔ peritos auxiliares
 CREATE TABLE Caso_Perito (
-    caso_id VARCHAR(255),
-    perito_id VARCHAR(255),
+    caso_id INT,
+    perito_id INT,
     PRIMARY KEY (caso_id, perito_id),
     FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (perito_id) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Evidência unificada
-CREATE TABLE Evidence (
-    id VARCHAR(255) PRIMARY KEY,
-    tipo VARCHAR(50) NOT NULL,
-    dataColeta DATE NOT NULL,
-    coletadoPor VARCHAR(255) NOT NULL,
-    casoId VARCHAR(255) NOT NULL,
-    conteudoTexto TEXT,
-    imagemURL TEXT,
-    FOREIGN KEY (coletadoPor) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (casoId) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- Relatórios
-CREATE TABLE Relatorio (
-    id VARCHAR(255) PRIMARY KEY,
-    titulo VARCHAR(255) NOT NULL,
-    conteudo TEXT NOT NULL,
-    dataCriacao DATE NOT NULL,
-    peritoResponsavel VARCHAR(255) NOT NULL,
-    caso_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (peritoResponsavel) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+-- Evidências
+CREATE TABLE Evidencias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    caso_id INT NOT NULL,
+    tipo VARCHAR(100),
+    descricao TEXT,
+    arquivo_url VARCHAR(255),
+    data_coleta DATE,
     FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- Laudos
-CREATE TABLE Laudo (
-    id VARCHAR(255) PRIMARY KEY,
-    resultado VARCHAR(255) NOT NULL,
-    precisao FLOAT NOT NULL,
-    dataAnalise DATE NOT NULL,
-    analisadoPor VARCHAR(255) NOT NULL,
-    evidenciaId VARCHAR(255) NOT NULL,
-    FOREIGN KEY (analisadoPor) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (evidenciaId) REFERENCES Evidence(id) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE Laudos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    caso_id INT NOT NULL,
+    conteudo TEXT NOT NULL,
+    data_emissao DATE,
+    emitido_por_id INT,
+    arquivo_pdf_url VARCHAR(255),
+    status ENUM('rascunho', 'em_revisao', 'finalizado') DEFAULT 'rascunho',
+    chave_verificacao VARCHAR(64) UNIQUE,
+    FOREIGN KEY (caso_id) REFERENCES Caso(id),
+    FOREIGN KEY (emitido_por_id) REFERENCES User(id)
 );
+
+-- Anexos dos laudos
+CREATE TABLE Anexos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    laudo_id INT,
+    nome_arquivo VARCHAR(255),
+    caminho_arquivo VARCHAR(255),
+    tipo_mime VARCHAR(100),
+    FOREIGN KEY (laudo_id) REFERENCES Laudos(id) ON DELETE CASCADE
+);
+
+-- Banco de dados odontolegal
+CREATE TABLE Banco_Odontolegal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome_individuo VARCHAR(100),
+    registro_dentario TEXT,
+    observacoes TEXT,
+    data_registro DATE
+);
+
+-- Comentários internos nos casos
+CREATE TABLE Comentarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    caso_id INT NOT NULL,
+    user_id INT NOT NULL,
+    comentario TEXT NOT NULL,
+    data_comentario DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (caso_id) REFERENCES Caso(id),
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+-- Logs (histórico de ações no sistema)
+CREATE TABLE Logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    acao VARCHAR(255),
+    tabela_afetada VARCHAR(50),
+    registro_id INT,
+    data_acao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+-- Notificações
+CREATE TABLE Notificacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    titulo VARCHAR(255),
+    mensagem TEXT,
+    lida BOOLEAN DEFAULT FALSE,
+    data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id)
+);
+
+-- Configurações do sistema
+CREATE TABLE Configuracoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    chave VARCHAR(100) UNIQUE NOT NULL,
+    valor TEXT
+);
+
