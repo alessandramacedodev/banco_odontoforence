@@ -1,68 +1,62 @@
 CREATE DATABASE odontoforense;
 USE odontoforense;
 
--- Usuário base com perfil (Admin, Perito, Assistente)
+-- Usuários
 CREATE TABLE User (
     id VARCHAR(255) PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    perfil ENUM('Admin', 'Perito', 'Assistente') NOT NULL, -- Usando ENUM para o perfil
-    INDEX (email) -- Índice para melhorar o desempenho nas consultas por email
+    role ENUM('Admin', 'Perito', 'Assistente') NOT NULL,
+    INDEX (email)
 );
 
--- Casos forenses com local e perito responsável
+-- Casos
 CREATE TABLE Caso (
     id VARCHAR(255) PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     descricao TEXT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    local VARCHAR(255) NOT NULL,
     dataAbertura DATE NOT NULL,
-    datadoocorrido DATE NOT NULL,
-    dataFechamento DATE,
-    peritoResponsavel Id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (peritoResponsavelId) REFERENCES Perito(id) ON DELETE CASCADE ON UPDATE CASCADE
+    dataFechamento DATE
 );
 
--- Evidência ligada ao caso e quem coletou
+-- Relacionamento caso ↔ perito
+CREATE TABLE Caso_Perito (
+    caso_id VARCHAR(255),
+    perito_id VARCHAR(255),
+    PRIMARY KEY (caso_id, perito_id),
+    FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (perito_id) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Evidência unificada
 CREATE TABLE Evidence (
     id VARCHAR(255) PRIMARY KEY,
     tipo VARCHAR(50) NOT NULL,
     dataColeta DATE NOT NULL,
     coletadoPor VARCHAR(255) NOT NULL,
     casoId VARCHAR(255) NOT NULL,
+    conteudoTexto TEXT,
+    imagemURL TEXT,
     FOREIGN KEY (coletadoPor) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (casoId) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Evidências especializadas
-CREATE TABLE ImageEvidence (
-    id VARCHAR(255) PRIMARY KEY,
-    imagemURL TEXT NOT NULL,
-    FOREIGN KEY (id) REFERENCES Evidence(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE TextEvidence (
-    id VARCHAR(255) PRIMARY KEY,
-    conteudo TEXT NOT NULL,
-    FOREIGN KEY (id) REFERENCES Evidence(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 -- Relatórios
-CREATE TABLE Report (
+CREATE TABLE Relatorio (
     id VARCHAR(255) PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     conteudo TEXT NOT NULL,
     dataCriacao DATE NOT NULL,
     peritoResponsavel VARCHAR(255) NOT NULL,
-    case_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (peritoResponsavel) REFERENCES Perito(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (case_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
+    caso_id VARCHAR(255) NOT NULL,
+    FOREIGN KEY (peritoResponsavel) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Resultados de comparação ligados à evidência
-CREATE TABLE laudo (
+-- Laudos
+CREATE TABLE Laudo (
     id VARCHAR(255) PRIMARY KEY,
     resultado VARCHAR(255) NOT NULL,
     precisao FLOAT NOT NULL,
