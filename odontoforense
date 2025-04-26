@@ -65,3 +65,53 @@ CREATE TABLE configuracoes (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+
+-- Inserir usuários
+INSERT INTO users (id, name, email, password, role) VALUES
+  (125, 'Ana Costa', 'ana.costa@example.com', 'senha123', 'admin'),
+  (126, 'Bruno Lima', 'bruno.lima@example.com', 'senha123', 'perito'),
+  (127, 'Carla Mendes', 'carla.mendes@example.com', 'senha123', 'assistente'),
+  (128, 'Diego Nunes', 'diego.nunes@example.com', 'senha123', 'perito'),
+  (129, 'Elaine Rocha', 'elaine.rocha@example.com', 'senha123', 'assistente');
+
+-- Inserir casos
+INSERT INTO cases (id, title, description, local, user_id, status) VALUES
+  (201, 'Caso 1', 'Corpo encontrado em área urbana', 'São Paulo - SP', 126, 'pendente'),
+  (202, 'Caso 2', 'Acidente de carro com vítima fatal', 'Curitiba - PR', 126, 'em andamento'),
+  (203, 'Caso 3', 'Restos mortais em área rural', 'Goiânia - GO', 128, 'concluído'),
+  (204, 'Caso 4', 'Crânio encontrado no rio', 'Manaus - AM', 128, 'pendente'),
+  (205, 'Caso 5', 'Vítima de incêndio residencial', 'Belo Horizonte - MG', 126, 'em andamento');
+
+-- Inserir evidências
+INSERT INTO evidences (id, description, type, case_id, arquivo, cadastrado_por) VALUES
+  (301, 'Foto da arcada dentária', 'imagem', 201, 'foto_arcada.jpg', 127),
+  (302, 'Documento com histórico odontológico', 'documento', 202, 'historico.pdf', 127),
+  (303, 'Dente molar encontrado', 'objeto', 203, 'dente_molar.png', 129),
+  (304, 'Imagem do crânio', 'imagem', 204, 'cranio.jpg', 129),
+  (305, 'Outro objeto carbonizado', 'outro', 205, 'objeto_carbonizado.jpg', 127);
+
+-- Inserir laudos
+INSERT INTO laudos (id, evidence_id, conteudo, responsavel, file_path) VALUES
+  (401, 301, 'Laudo preliminar da arcada dentária.', 126, 'laudos/laudo1.pdf'),
+  (402, 302, 'Análise do histórico odontológico.', 126, 'laudos/laudo2.pdf'),
+  (403, 303, 'Identificação com base no dente molar.', 128, 'laudos/laudo3.pdf'),
+  (404, 304, 'Avaliação do crânio encontrado.', 128, 'laudos/laudo4.pdf'),
+  (405, 305, 'Análise de objeto carbonizado.', 126, 'laudos/laudo5.pdf');
+
+-- Inserir banco odonto-legal
+INSERT INTO banco_odonto_legal (id, nome, idade, genero, identificadores_odonto, observacoes) VALUES
+  (501, 'João Silva', 34, 'Masculino', 'Prótese superior completa', 'Suspeita de ser a vítima do Caso 1'),
+  (502, 'Maria Souza', 28, 'Feminino', 'Dente canino com ouro', 'Parente confirmou características'),
+  (503, 'Carlos Oliveira', 45, 'Masculino', 'Ausência do segundo molar inferior esquerdo', 'Suspeito de Caso 3'),
+  (504, 'Luciana Dias', 31, 'Feminino', 'Implante dentário frontal', 'Envolvimento em caso de desaparecimento'),
+  (505, 'Fernando Reis', 52, 'Masculino', 'Arcada com desgaste acentuado', 'Sobrevivente identificado posteriormente');
+
+-- Inserir configurações
+INSERT INTO configuracoes (id, chave, valor) VALUES
+  (601, 'tema_sistema', '{"tema": "escuro"}'),
+  (602, 'limite_upload', '{"tamanho_maximo": "25MB"}'),
+  (603, 'idioma_padrao', '{"idioma": "pt-BR"}'),
+  (604, 'notificacoes_email', '{"ativado": true}'),
+  (605, 'exibir_dicas', '{"mostrar": false}');
