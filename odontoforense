@@ -1,105 +1,71 @@
-CREATE DATABASE odontoforense;
-USE odontoforense;
+-- Ativar extensão de UUID (se ainda não estiver ativa)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Usuários
-CREATE TABLE Usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    role ENUM('Admin', 'Perito', 'Assistente') NOT NULL,
-    ativo BOOLEAN DEFAULT TRUE,
-    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-    INDEX (email)
+-- Recriar tabela users
+DROP TABLE IF EXISTS users CASCADE;
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'perito' CHECK (role IN ('admin', 'perito', 'assistente'))
 );
 
--- Casos periciais
-CREATE TABLE Caso (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(255) NOT NULL,
-    descricao TEXT NOT NULL,
-    status ENUM('aberto', 'em_andamento', 'concluido') DEFAULT 'aberto',
-    dataAbertura DATE NOT NULL,
-    dataFechamento DATE,
-    perito_responsavel_id INT,
-    FOREIGN KEY (perito_responsavel_id) REFERENCES Usuarios(id)
+-- Recriar tabela cases
+DROP TABLE IF EXISTS cases CASCADE;
+CREATE TABLE cases (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT,
+  local TEXT,
+  user_id UUID NOT NULL REFERENCES users(id),
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'em andamento', 'concluído')),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Relacionamento caso ↔ peritos auxiliares
-CREATE TABLE Caso_Perito (
-    caso_id INT,
-    perito_id INT,
-    PRIMARY KEY (caso_id, perito_id),
-    FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (perito_id) REFERENCES Usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
+-- Recriar tabela evidences
+DROP TABLE IF EXISTS evidences CASCADE;
+CREATE TABLE evidences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  description TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'outro' CHECK (type IN ('imagem', 'documento', 'objeto', 'outro')),
+  case_id UUID NOT NULL REFERENCES cases(id),
+  arquivo TEXT,
+  cadastrado_por UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Evidências
-CREATE TABLE Evidencias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    caso_id INT NOT NULL,
-    tipo VARCHAR(100),
-    descricao TEXT,
-    arquivo_url VARCHAR(255),
-    data_coleta DATE,
-    FOREIGN KEY (caso_id) REFERENCES Caso(id) ON DELETE CASCADE ON UPDATE CASCADE
+-- Recriar tabela laudos
+DROP TABLE IF EXISTS laudos CASCADE;
+CREATE TABLE laudos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  evidence_id UUID NOT NULL REFERENCES evidences(id),
+  conteudo TEXT NOT NULL,
+  data_emissao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  responsavel UUID NOT NULL REFERENCES users(id),
+  file_path TEXT NOT NULL
 );
 
--- Laudos
-CREATE TABLE Laudos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    caso_id INT NOT NULL,
-    emitido_por_id INT NOT NULL,
-    titulo VARCHAR(200) NOT NULL,
-    conteudo TEXT NOT NULL,
-    data_emissao DATE NOT NULL,
-    arquivo_pdf_url VARCHAR(255),
-    status ENUM('rascunho', 'em_revisao', 'finalizado') DEFAULT 'rascunho',
-    chave_verificacao VARCHAR(255) UNIQUE,
-    FOREIGN KEY (caso_id) REFERENCES Caso(id),
-    FOREIGN KEY (emitido_por_id) REFERENCES Usuarios(id)
-);
-
--- Anexos dos laudos
-CREATE TABLE Anexos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    laudo_id INT,
-    nome_arquivo VARCHAR(255),
-    caminho_arquivo VARCHAR(255),
-    tipo_mime VARCHAR(100),
-    FOREIGN KEY (laudo_id) REFERENCES Laudos(id) ON DELETE CASCADE
-);
-
--- Banco de dados odontolegal
+-- Recriar tabela banco_odonto_legal
+DROP TABLE IF EXISTS banco_odonto_legal CASCADE;
 CREATE TABLE banco_odonto_legal (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome_individuo VARCHAR(150),
-    idade INTEGER,
-    genero VARCHAR(20),
-    observacoes TEXT,
-    registros_dentarios TEXT,
-    usuario_id INT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES Usuarios(id) ON DELETE SET NULL
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  nome TEXT NOT NULL,
+  idade INTEGER NOT NULL,
+  genero TEXT NOT NULL,
+  identificadores_odonto TEXT,
+  observacoes TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Logs (histórico de ações no sistema)
-CREATE TABLE Logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    acao VARCHAR(255),
-    tabela_afetada VARCHAR(50),
-    registro_id INT,
-    data_acao DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Usuarios(id)
-);
-
--- Configurações do sistema
+-- Recriar tabela configuracoes
+DROP TABLE IF EXISTS configuracoes CASCADE;
 CREATE TABLE configuracoes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    chave VARCHAR(100) UNIQUE NOT NULL,
-    valor TEXT NOT NULL,
-    usuario_id INT,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES Usuarios(id) ON DELETE SET NULL
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  chave TEXT NOT NULL UNIQUE,
+  valor JSONB,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
