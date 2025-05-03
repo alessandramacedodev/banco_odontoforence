@@ -1,13 +1,3 @@
--- Exclusão das tabelas, se já existirem
-DROP TABLE IF EXISTS equipe_caso CASCADE;
-DROP TABLE IF EXISTS evidencias CASCADE;
-DROP TABLE IF EXISTS anexos_laudos CASCADE;
-DROP TABLE IF EXISTS laudos CASCADE;
-DROP TABLE IF EXISTS casos_periciais CASCADE;
-DROP TABLE IF EXISTS comparacoes CASCADE;
-DROP TABLE IF EXISTS registros_odontologicos CASCADE;
-DROP TABLE IF EXISTS usuarios CASCADE;
-
 -- Criação da tabela de usuários
 CREATE TABLE usuarios (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -18,15 +8,7 @@ CREATE TABLE usuarios (
     criado_em TIMESTAMP DEFAULT NOW()
 );
 
--- Registros iniciais
-INSERT INTO usuarios (nome_completo, email, perfil, status) VALUES
-('Carlos Silva', 'carlos@exemplo.com', 'perito', 'concluido'),
-('Ana Pereira', 'ana@exemplo.com', 'assistente', 'em_andamento'),
-('Marcos Oliveira', 'marcos@exemplo.com', 'perito', 'pendente'),
-('Joana Lima', 'joana@exemplo.com', 'administrador', 'arquivo'),
-('Luciana Rocha', 'luciana@exemplo.com', 'assistente', 'concluido');
-
--- Registros odontológicos
+-- Criação da tabela de registros odontológicos
 CREATE TABLE registros_odontologicos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tipo TEXT CHECK (tipo IN ('Ante-Mortem', 'Post-Mortem')) NOT NULL,
@@ -36,7 +18,7 @@ CREATE TABLE registros_odontologicos (
     usuario_id UUID REFERENCES usuarios(id)
 );
 
--- Comparações
+-- Criação da tabela de comparações
 CREATE TABLE comparacoes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     registro_ante_mortem_id UUID REFERENCES registros_odontologicos(id),
@@ -45,7 +27,7 @@ CREATE TABLE comparacoes (
     porcentagem_compatibilidade NUMERIC
 );
 
--- Casos periciais
+-- Criação da tabela de casos periciais
 CREATE TABLE casos_periciais (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     numero TEXT NOT NULL,
@@ -57,7 +39,7 @@ CREATE TABLE casos_periciais (
     perito_responsavel_id UUID REFERENCES usuarios(id)
 );
 
--- Laudos
+-- Criação da tabela de laudos
 CREATE TABLE laudos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     numero TEXT NOT NULL,
@@ -69,7 +51,7 @@ CREATE TABLE laudos (
     autor_id UUID REFERENCES usuarios(id)
 );
 
--- Anexos dos laudos
+-- Criação da tabela de anexos dos laudos
 CREATE TABLE anexos_laudos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     laudo_id UUID REFERENCES laudos(id),
@@ -78,7 +60,7 @@ CREATE TABLE anexos_laudos (
     data_upload DATE DEFAULT CURRENT_DATE
 );
 
--- Evidências
+-- Criação da tabela de evidências
 CREATE TABLE evidencias (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     caso_id UUID REFERENCES casos_periciais(id),
@@ -90,10 +72,85 @@ CREATE TABLE evidencias (
     url_arquivo TEXT
 );
 
--- Equipe dos casos
+-- Criação da tabela equipe_caso
 CREATE TABLE equipe_caso (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     caso_id UUID REFERENCES casos_periciais(id),
     usuario_id UUID REFERENCES usuarios(id),
     funcao TEXT
 );
+
+-- Inserção dos usuários
+WITH usuarios_inseridos AS (
+  INSERT INTO usuarios (nome_completo, email, perfil, status) VALUES
+    ('Carlos Silva', 'carlos@exemplo.com', 'perito', 'concluido'),
+    ('Ana Pereira', 'ana@exemplo.com', 'assistente', 'em_andamento'),
+    ('Marcos Oliveira', 'marcos@exemplo.com', 'perito', 'pendente'),
+    ('Joana Lima', 'joana@exemplo.com', 'administrador', 'arquivo'),
+    ('Luciana Rocha', 'luciana@exemplo.com', 'assistente', 'concluido')
+  RETURNING id, nome_completo
+),
+-- Inserção dos casos periciais
+casos AS (
+  INSERT INTO casos_periciais (numero, descricao, data_abertura, status, local, solicitado_por, perito_responsavel_id)
+  VALUES
+    ('2023-001', 'Análise de restos mortais encontrados em área rural', '2023-01-15', 'Concluído', 'Zona Rural', 'Ana Pereira',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Ana Pereira')),
+    ('2023-002', 'Identificação odontológica de vítima de acidente aéreo', '2023-02-03', 'Em Andamento', 'Aeroporto', 'Carlos Silva',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Carlos Silva')),
+    ('2023-003', 'Análise de marcas de mordida em caso de agressão', '2023-03-17', 'Pendente', 'Delegacia Central', 'Marcos Oliveira',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Marcos Oliveira')),
+    ('2023-004', 'Exame de DNA para identificação de parentesco', '2023-04-05', 'Em Andamento', 'Laboratório Nacional', 'Ana Pereira',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Ana Pereira')),
+    ('2023-005', 'Análise de restos ósseos encontrados em escavação arqueológica', '2023-05-22', 'Arquivado', 'Sítio Arqueológico', 'Marcos Oliveira',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Marcos Oliveira'))
+  RETURNING id, numero
+),
+-- Inserção de registros odontológicos
+registros AS (
+  INSERT INTO registros_odontologicos (tipo, data_registro, caracteristicas, status, usuario_id)
+  VALUES
+    ('Ante-Mortem', '2023-01-12', 'Ausência de terceiros molares, restauração em amálgama no dente 36.', 'Identificado',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Carlos Silva')),
+    ('Post-Mortem', '2023-01-13', 'Dentes anteriores fraturados, restauração em resina no dente 11.', 'Não Identificado',
+     (SELECT id FROM usuarios WHERE nome_completo = 'Carlos Silva'))
+  RETURNING id
+),
+-- Inserção de laudos
+laudos_insert AS (
+  INSERT INTO laudos (numero, titulo, data, tipo, caso_id, autor_id)
+  VALUES
+    ('LP-2023-001', 'Laudo Preliminar de Identificação Odontológica', '2023-02-05', 'Preliminar',
+     (SELECT id FROM casos_periciais WHERE numero = '2023-002'),
+     (SELECT id FROM usuarios WHERE nome_completo = 'Carlos Silva')),
+
+    ('LP-2023-002', 'Laudo Final de Identificação Odontológica', '2023-02-15', 'Final',
+     (SELECT id FROM casos_periciais WHERE numero = '2023-002'),
+     (SELECT id FROM usuarios WHERE nome_completo = 'Carlos Silva')),
+
+    ('LP-2023-003', 'Laudo de Análise de Marcas de Mordida', '2023-03-20', 'Preliminar',
+     (SELECT id FROM casos_periciais WHERE numero = '2023-003'),
+     (SELECT id FROM usuarios WHERE nome_completo = 'Marcos Oliveira')),
+
+    ('LP-2023-004', 'Laudo Complementar de Análise de Marcas de Mordida', '2023-04-05', 'Complementar',
+     (SELECT id FROM casos_periciais WHERE numero = '2023-003'),
+     (SELECT id FROM usuarios WHERE nome_completo = 'Marcos Oliveira')),
+
+    ('LP-2023-005', 'Laudo de Análise de DNA para Identificação', '2023-04-12', 'Final',
+     (SELECT id FROM casos_periciais WHERE numero = '2023-004'),
+     (SELECT id FROM usuarios WHERE nome_completo = 'Ana Pereira'))
+),
+-- Inserção de evidências
+evidencias_insert AS (
+  INSERT INTO evidencias (caso_id, nome, categoria, data_recebimento, descricao, local_retirada, url_arquivo)
+  VALUES
+    (
+      (SELECT id FROM casos_periciais WHERE numero = '2023-002'),
+      'Radiografia panorâmica',
+      'odontologica',
+      '2023-02-04',
+      'Imagem obtida durante a perícia da vítima do acidente aéreo.',
+      'AGENCIA',
+      'https://example.com/radiografia_pan.jpg'
+    )
+)
