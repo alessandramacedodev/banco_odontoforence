@@ -1,0 +1,150 @@
+{
+  "usuarios": [
+    {
+      "nome_completo": "Carlos Silva",
+      "email": "carlos@exemplo.com",
+      "perfil": "perito",
+      "status": "concluido"
+    },
+    {
+      "nome_completo": "Ana Pereira",
+      "email": "ana@exemplo.com",
+      "perfil": "assistente",
+      "status": "em_andamento"
+    },
+    {
+      "nome_completo": "Marcos Oliveira",
+      "email": "marcos@exemplo.com",
+      "perfil": "perito",
+      "status": "pendente"
+    },
+    {
+      "nome_completo": "Joana Lima",
+      "email": "joana@exemplo.com",
+      "perfil": "administrador",
+      "status": "arquivo"
+    },
+    {
+      "nome_completo": "Luciana Rocha",
+      "email": "luciana@exemplo.com",
+      "perfil": "assistente",
+      "status": "concluido"
+    }
+  ],
+  "casos_periciais": [
+    {
+      "numero": "2023-001",
+      "descricao": "Análise de restos mortais encontrados em área rural",
+      "data_abertura": "2023-01-15",
+      "status": "Concluído",
+      "local": "Zona Rural",
+      "solicitado_por": "Ana Pereira",
+      "perito_responsavel": "Ana Pereira"
+    },
+    {
+      "numero": "2023-002",
+      "descricao": "Identificação odontológica de vítima de acidente aéreo",
+      "data_abertura": "2023-02-03",
+      "status": "Em Andamento",
+      "local": "Aeroporto",
+      "solicitado_por": "Carlos Silva",
+      "perito_responsavel": "Carlos Silva"
+    },
+    {
+      "numero": "2023-003",
+      "descricao": "Análise de marcas de mordida em caso de agressão",
+      "data_abertura": "2023-03-17",
+      "status": "Pendente",
+      "local": "Delegacia Central",
+      "solicitado_por": "Marcos Oliveira",
+      "perito_responsavel": "Marcos Oliveira"
+    },
+    {
+      "numero": "2023-004",
+      "descricao": "Exame de DNA para identificação de parentesco",
+      "data_abertura": "2023-04-05",
+      "status": "Em Andamento",
+      "local": "Laboratório Nacional",
+      "solicitado_por": "Ana Pereira",
+      "perito_responsavel": "Ana Pereira"
+    },
+    {
+      "numero": "2023-005",
+      "descricao": "Análise de restos ósseos encontrados em escavação arqueológica",
+      "data_abertura": "2023-05-22",
+      "status": "Arquivado",
+      "local": "Sítio Arqueológico",
+      "solicitado_por": "Marcos Oliveira",
+      "perito_responsavel": "Marcos Oliveira"
+    }
+  ],
+  "registros_odontologicos": [
+    {
+      "tipo": "Ante-Mortem",
+      "data_registro": "2023-01-12",
+      "caracteristicas": "Ausência de terceiros molares, restauração em amálgama no dente 36.",
+      "status": "Identificado",
+      "usuario": "Carlos Silva"
+    },
+    {
+      "tipo": "Post-Mortem",
+      "data_registro": "2023-01-13",
+      "caracteristicas": "Dentes anteriores fraturados, restauração em resina no dente 11.",
+      "status": "Não Identificado",
+      "usuario": "Carlos Silva"
+    }
+  ],
+  "laudos": [
+    {
+      "numero": "LP-2023-001",
+      "titulo": "Laudo Preliminar de Identificação Odontológica",
+      "data": "2023-02-05",
+      "tipo": "Preliminar",
+      "caso": "2023-002",
+      "autor": "Carlos Silva"
+    },
+    {
+      "numero": "LP-2023-002",
+      "titulo": "Laudo Final de Identificação Odontológica",
+      "data": "2023-02-15",
+      "tipo": "Final",
+      "caso": "2023-002",
+      "autor": "Carlos Silva"
+    },
+    {
+      "numero": "LP-2023-003",
+      "titulo": "Laudo de Análise de Marcas de Mordida",
+      "data": "2023-03-20",
+      "tipo": "Preliminar",
+      "caso": "2023-003",
+      "autor": "Marcos Oliveira"
+    },
+    {
+      "numero": "LP-2023-004",
+      "titulo": "Laudo Complementar de Análise de Marcas de Mordida",
+      "data": "2023-04-05",
+      "tipo": "Complementar",
+      "caso": "2023-003",
+      "autor": "Marcos Oliveira"
+    },
+    {
+      "numero": "LP-2023-005",
+      "titulo": "Laudo de Análise de DNA para Identificação",
+      "data": "2023-04-12",
+      "tipo": "Final",
+      "caso": "2023-004",
+      "autor": "Ana Pereira"
+    }
+  ],
+  "evidencias": [
+    {
+      "caso": "2023-002",
+      "nome": "Radiografia panorâmica",
+      "categoria": "odontologica",
+      "data_recebimento": "2023-02-04",
+      "descricao": "Imagem obtida durante a perícia da vítima do acidente aéreo.",
+      "local_retirada": "AGENCIA",
+      "url_arquivo": "https://example.com/radiografia_pan.jpg"
+    }
+  ]
+}
